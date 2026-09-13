@@ -233,7 +233,7 @@ export async function getFleetData(): Promise<FleetVehicle[]> {
                 } catch { /* ignore */ }
             }
 
-            const reasons = (dashboard.recent_alerts || []).map((a: any) => a.type);
+            const reasons = (dashboard.recent_alerts || []).map((a: { type?: string }) => a.type);
             const score = floatOrDefault(dashboard.current_risk_score, 0);
             let riskLevel: 'Low' | 'Medium' | 'High' | 'Critical' = 'Low';
             if (score >= 80) riskLevel = 'Critical';
@@ -262,15 +262,36 @@ export async function getFleetData(): Promise<FleetVehicle[]> {
     }
 }
 
+// Shape of a raw Alert object as returned by AlertSerializer — only the
+// fields getAlerts() actually reads, kept loose/optional to tolerate
+// backend field additions without breaking the mapper below.
+interface RawAlertDTO {
+    alert_id: string;
+    trip_id?: string;
+    timestamp: string;
+    description: string;
+    severity: string;
+    ai_explanation?: string | null;
+    risk_score?: number;
+    alert_type?: string;
+    type?: string;
+    truck_license_plate?: string;
+    truck_id?: string;
+    gps_lat?: number | string | null;
+    gps_lng?: number | string | null;
+    trip?: { truck?: { license_plate?: string }; truck_id?: string };
+    truck?: { license_plate?: string };
+}
+
 export async function getAlerts(): Promise<Alert[]> {
     if (USE_MOCK) return SEED_ALERTS;
 
     try {
         const res = await fetch(`${API_BASE_URL}/alerts/`, { headers: authHeaders() });
         if (!res.ok) throw new Error('alerts fetch failed');
-        const data = await res.json();
+        const data: RawAlertDTO[] = await res.json();
 
-        const mapped = data.map((d: any) => {
+        const mapped = data.map((d) => {
             const date = new Date(d.timestamp);
             // Resolve truck identifier — backend now sends truck_license_plate directly
             const truckId =
@@ -284,7 +305,7 @@ export async function getAlerts(): Promise<Alert[]> {
             // Location: backend now returns gps_lat / gps_lng from the latest GPSLog
             const location: { lat: number; lng: number } | undefined =
                 (d.gps_lat != null && d.gps_lng != null)
-                    ? { lat: parseFloat(d.gps_lat), lng: parseFloat(d.gps_lng) }
+                    ? { lat: parseFloat(String(d.gps_lat)), lng: parseFloat(String(d.gps_lng)) }
                     : undefined;
 
             return {
@@ -293,13 +314,13 @@ export async function getAlerts(): Promise<Alert[]> {
                 tripId: d.trip_id || undefined,
                 time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 message: d.description,
-                level: d.severity,
+                level: d.severity as Alert['level'],
                 aiExplanation: d.ai_explanation || '',
                 riskScore: d.risk_score ?? undefined,
                 type: d.alert_type || d.type || 'System',
                 location,
             };
-        }).sort((a: any, b: any) => (a.time > b.time ? -1 : 1));
+        }).sort((a, b) => (a.time > b.time ? -1 : 1));
 
         return mapped;
 
@@ -317,7 +338,7 @@ export async function triggerSimulation(tripId: string): Promise<boolean> {
             body: JSON.stringify({ trip_id: tripId })
         });
         return res.ok;
-    } catch (e) {
+    } catch {
         // Demo mode: simulate success
         console.warn('[RAKSHAK] Simulate endpoint unavailable — demo mode triggered.');
         return true;
@@ -343,8 +364,9 @@ export async function getVisionDetection(): Promise<{ active: boolean; log: stri
 }
 
 // Utility
-function floatOrDefault(val: any, defaultVal: number): number {
-    const parsed = parseFloat(val);
+function floatOrDefault(val: unknown, defaultVal: number): number {
+    if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+    const parsed = parseFloat(String(val ?? ''));
     return isNaN(parsed) ? defaultVal : parsed;
 }
 
