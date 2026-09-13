@@ -31,7 +31,6 @@ export const STATUS_COLORS: Record<string, string> = {
     Inactive: '#94a3b8',
 };
 
-const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#06b6d4'];
 
 const tooltipStyle = {
     backgroundColor: '#1e293b',
@@ -45,13 +44,26 @@ const legendStyle = { fontSize: '0.75rem', color: '#94a3b8' };
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
-function CustomTooltip({ active, payload, label }: any) {
+interface TooltipPayloadEntry {
+    name?: string;
+    value?: string | number;
+    color?: string;
+    fill?: string;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipPayloadEntry[];
+    label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     if (!active || !payload?.length) return null;
     return (
         <div style={tooltipStyle}>
             {label && <div style={{ padding: '6px 10px 4px', fontWeight: 700, color: '#cbd5e1', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>{label}</div>}
             <div style={{ padding: '6px 10px 8px' }}>
-                {payload.map((p: any, i: number) => (
+                {payload.map((p, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color || p.fill, display: 'inline-block', flexShrink: 0 }} />
                         <span style={{ color: '#94a3b8' }}>{p.name}:</span>
@@ -276,7 +288,7 @@ export function CompanyFleetBars({ data, title, height = 260 }: CompanyFleetBars
 
 // ─── 6. Multi-Line Comparison (trips over time) ───────────────────────────────
 
-interface MultiLineEntry { label: string;[key: string]: any; }
+interface MultiLineEntry { label: string;[key: string]: string | number; }
 
 export function MultiLineChart({ data, lines, title, height = 180 }: {
     data: MultiLineEntry[];

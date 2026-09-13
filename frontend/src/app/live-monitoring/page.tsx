@@ -97,6 +97,7 @@ export default function JourneyReport() {
         score >= 75 ? '#dc2626' : score >= 55 ? '#f59e0b' : score >= 35 ? '#3b82f6' : '#10b981';
 
     return (
+        <AuthGuard>
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className={styles.container}>
             {/* J1: Clear breadcrumb clarifying what this page is */}
             <motion.div variants={fadeUp} className={styles.header}>
@@ -407,5 +408,6 @@ export default function JourneyReport() {
                 </motion.section>
             </div>
         </motion.div>
+        </AuthGuard>
     );
 }

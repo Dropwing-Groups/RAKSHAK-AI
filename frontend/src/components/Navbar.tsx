@@ -18,16 +18,22 @@ export default function Navbar() {
 
     // Fetch alert count badge — only when authenticated
     useEffect(() => {
-        if (!isAuthenticated) { setCriticalCount(0); return; }
+        if (!isAuthenticated) return;
+        let cancelled = false;
         async function fetchCount() {
             const alerts = await getAlerts();
+            if (cancelled) return;
             const high = alerts.filter(a => a.level === 'Critical' || a.level === 'High').length;
             setCriticalCount(high);
         }
         fetchCount();
         const interval = setInterval(fetchCount, 30000);
-        return () => clearInterval(interval);
+        return () => { cancelled = true; clearInterval(interval); };
     }, [isAuthenticated]);
+
+    // Badge is only meaningful while signed in — derive at render time
+    // instead of resetting state from the effect above.
+    const displayCriticalCount = isAuthenticated ? criticalCount : 0;
 
     const handleLogout = async () => {
         await logout();
@@ -82,9 +88,9 @@ export default function Navbar() {
                             aria-current={isActive(href) ? 'page' : undefined}
                         >
                             {label}
-                            {href === '/alerts' && criticalCount > 0 && (
-                                <span className={styles.alertBadge} aria-label={`${criticalCount} high-priority alerts`}>
-                                    {criticalCount}
+                            {href === '/alerts' && displayCriticalCount > 0 && (
+                                <span className={styles.alertBadge} aria-label={`${displayCriticalCount} high-priority alerts`}>
+                                    {displayCriticalCount}
                                 </span>
                             )}
                             {isActive(href) && <span className={styles.activeDot} />}
@@ -98,10 +104,10 @@ export default function Navbar() {
                 {isAuthenticated && user ? (
                     /* ── User menu dropdown ─────────────────────────────────── */
                     <div className={styles.userMenuWrap}>
-                        {criticalCount > 0 && (
+                        {displayCriticalCount > 0 && (
                             <Link href="/alerts" className={styles.bellBtn} aria-label="Alerts">
                                 <Bell size={18} />
-                                <span className={styles.bellBadge}>{criticalCount}</span>
+                                <span className={styles.bellBadge}>{displayCriticalCount}</span>
                             </Link>
                         )}
                         <button
@@ -151,8 +157,8 @@ export default function Navbar() {
                         aria-expanded={mobileOpen}
                     >
                         {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-                        {criticalCount > 0 && !mobileOpen && (
-                            <span className={styles.hamburgerBadge}>{criticalCount}</span>
+                        {displayCriticalCount > 0 && !mobileOpen && (
+                            <span className={styles.hamburgerBadge}>{displayCriticalCount}</span>
                         )}
                     </button>
                 )}
@@ -170,8 +176,8 @@ export default function Navbar() {
                             aria-current={isActive(href) ? 'page' : undefined}
                         >
                             {label}
-                            {href === '/alerts' && criticalCount > 0 && (
-                                <span className={styles.alertBadge}>{criticalCount}</span>
+                            {href === '/alerts' && displayCriticalCount > 0 && (
+                                <span className={styles.alertBadge}>{displayCriticalCount}</span>
                             )}
                         </Link>
                     ))}

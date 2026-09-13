@@ -254,3 +254,41 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"[{self.severity}] {self.type} Alert (score={self.risk_score}) — Trip {self.trip.trip_id}"
+
+
+# ============================================================
+# Journey Report (Pre-Journey Risk Report snapshot)
+# ============================================================
+
+class JourneyReport(models.Model):
+    """
+    A saved snapshot of the pre-journey risk assessment for a Trip.
+    Generated on demand via POST /api/trips/{id}/pre-journey-report/
+    by running the Route Agent against the trip's start/destination
+    and combining it with cargo value + driver history heuristics.
+    """
+    report_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip      = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='journey_reports')
+
+    baseline_route_risk  = models.FloatField(default=0.0)
+    route_risk_score     = models.FloatField(default=0.0)   # 0.0 - 1.0 raw agent score
+    in_safe_corridor      = models.BooleanField(default=True)
+    nearest_corridor_name = models.CharField(max_length=255, blank=True, null=True)
+    in_high_risk_zone     = models.BooleanField(default=False)
+    high_risk_zone_name   = models.CharField(max_length=255, blank=True, null=True)
+
+    cargo_value_factor   = models.FloatField(default=0.0, help_text="Risk contribution from cargo value")
+    driver_history_factor = models.FloatField(default=0.0, help_text="Risk contribution from driver's past alerts")
+
+    composite_risk_score = models.FloatField(default=0.0)   # 0-100 final pre-journey score
+    risk_level           = models.CharField(max_length=20, default='LOW')
+    recommendations       = models.JSONField(default=list, blank=True)
+    summary               = models.TextField(blank=True, null=True)
+
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-generated_at']
+
+    def __str__(self):
+        return f"Pre-Journey Report for Trip {self.trip.trip_id} @ {self.generated_at} ({self.risk_level})"
