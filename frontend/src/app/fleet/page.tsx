@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
     Truck, User, Package, DollarSign, MapPin, Shield, Activity,
-    RefreshCw, ChevronRight, Wifi, AlertTriangle, CheckCircle2, Clock, Plus
+    RefreshCw, ChevronRight, Wifi, Clock, Plus
 } from 'lucide-react';
 import { getTrucks, getTrips, TruckRecord, TripRecord, FleetVehicle, getFleetData, createTrip } from '@/services/apiClient';
 import { RiskBars, FleetStatusDonut } from '@/components/charts/ChartComponents';
@@ -77,6 +77,9 @@ export default function FleetPage() {
     };
 
     useEffect(() => {
+        // Initial load on mount — `loading` already defaults to true, so this
+        // only synchronizes fleet data with the external API, not React state.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time initial fetch, not a state-sync loop
         fetchAll();
         let interval: ReturnType<typeof setInterval>;
         const startPolling = () => {
@@ -112,6 +115,7 @@ export default function FleetPage() {
     });
 
     return (
+        <AuthGuard>
         <div className={styles.page}>
             {/* Header */}
             <motion.div variants={stagger} initial="hidden" animate="show" className={styles.header}>
@@ -601,5 +605,6 @@ export default function FleetPage() {
                 )}
             </AnimatePresence>
         </div>
+        </AuthGuard>
     );
 }
