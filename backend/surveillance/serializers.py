@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import LogisticsCompany, ControlAreaContact, CompanyUser, Truck, Trip, GPSLog, Alert
+from .models import (
+    LogisticsCompany, ControlAreaContact, CompanyUser, Truck, Trip, GPSLog, Alert,
+    JourneyReport,
+)
 
 
 class CompanyUserSerializer(serializers.ModelSerializer):
@@ -157,4 +160,16 @@ class AlertSerializer(serializers.ModelSerializer):
         if not (0.0 <= value <= 100.0):
             raise serializers.ValidationError("Risk score must be between 0 and 100.")
         return value
+
+
+class JourneyReportSerializer(serializers.ModelSerializer):
+    trip_id = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model  = JourneyReport
+        fields = '__all__'
+        read_only_fields = ['report_id', 'generated_at']
+
+    def get_trip_id(self, obj):
+        return str(obj.trip.trip_id)
 
