@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ComponentType } from 'react';
 import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import styles from './page.module.css';
 import { getFleetData, FleetVehicle } from '@/services/apiClient';
-import { Leaf, ArrowRight, Wind, Recycle, ShieldCheck, Sprout, TrendingDown, Cpu, Globe, Zap, Shield, Activity } from 'lucide-react';
+import { Leaf, ArrowRight, Wind, Recycle, ShieldCheck, Sprout, Cpu, Zap, Shield } from 'lucide-react';
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp = {
@@ -39,7 +39,21 @@ function AnimatedNumber({ value, suffix = '', prefix = '', decimals = 0 }: {
 }
 
 // ── Custom chart tooltip ──────────────────────────────────────────────────────
-function ChartTip({ active, payload, label, unit = '' }: any) {
+interface ChartTipPayloadEntry {
+    name?: string;
+    value?: string | number;
+    color?: string;
+    fill?: string;
+}
+
+interface ChartTipProps {
+    active?: boolean;
+    payload?: ChartTipPayloadEntry[];
+    label?: string;
+    unit?: string;
+}
+
+function ChartTip({ active, payload, label, unit = '' }: ChartTipProps) {
     if (!active || !payload?.length) return null;
     return (
         <div style={{
@@ -47,7 +61,7 @@ function ChartTip({ active, payload, label, unit = '' }: any) {
             borderRadius: 10, padding: '10px 14px', fontSize: '0.78rem', backdropFilter: 'blur(8px)',
         }}>
             {label && <div style={{ color: '#94a3b8', fontWeight: 700, marginBottom: 6 }}>{label}</div>}
-            {payload.map((p: any, i: number) => (
+            {payload.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: i > 0 ? 4 : 0 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color ?? p.fill, display: 'inline-block', flexShrink: 0 }} />
                     <span style={{ color: '#94a3b8' }}>{p.name}:</span>
@@ -75,7 +89,7 @@ function SDGBadge({ number, color, title }: { number: string; color: string; tit
 
 // ── Glassmorphism metric card ─────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color, sdg }: {
-    icon: any; label: string; value: string | number; sub: string; color: string; sdg?: string;
+    icon: ComponentType<{ size?: number }>; label: string; value: string | number; sub: string; color: string; sdg?: string;
 }) {
     return (
         <motion.div variants={scaleIn} className={styles.statCard}>
@@ -150,7 +164,7 @@ const clamp = (v: number) => Math.max(0, Math.min(100, v));
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SustainabilityPage() {
     const [fleet, setFleet] = useState<FleetVehicle[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
     useEffect(() => { getFleetData().then(d => { setFleet(d); setLoading(false); }); }, []);
 
@@ -192,7 +206,7 @@ export default function SustainabilityPage() {
                 <motion.p variants={fadeUp} className={styles.heroSub}>
                     RAKSHAK AI directly advances <strong>SDG 9</strong>, <strong>SDG 12</strong>, and <strong>SDG 13</strong> —
                     AI-optimised routing, real-time emissions tracking, theft prevention, and resilient infrastructure
-                    for India's logistics network.
+                    for India&apos;s logistics network.
                 </motion.p>
                 <motion.div variants={fadeUp} className={styles.heroSDGs}>
                     <SDGBadge number="9" color="#F36E26" title="Industry, Innovation & Infrastructure" />
@@ -363,7 +377,7 @@ export default function SustainabilityPage() {
                         <div>
                             <div className={styles.chartBadge} style={{ background: 'rgba(14,165,233,0.12)', color: '#0ea5e9' }}>SDG 9 · 12 · 13 Multi-Axis</div>
                             <h3>SDG Performance Radar</h3>
-                            <p>RAKSHAK AI's contribution across 6 key sustainability dimensions for each SDG.</p>
+                            <p>RAKSHAK AI&apos;s contribution across 6 key sustainability dimensions for each SDG.</p>
                         </div>
                         <div className={styles.sdgScorePills}>
                             {[
@@ -440,7 +454,7 @@ export default function SustainabilityPage() {
             <section className={styles.section}>
                 <motion.div className={styles.sectionHeader} initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp}>
                     <h2>SDG Alignment Overview</h2>
-                    <p>Your fleet's aggregate contribution to the UN 2030 Agenda.</p>
+                    <p>Your fleet&apos;s aggregate contribution to the UN 2030 Agenda.</p>
                 </motion.div>
                 <motion.div className={styles.overviewGrid} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} variants={stagger}>
                     {[
