@@ -63,12 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // ── Restore session from localStorage on mount ──────────────────────────────
+    // Intentionally synchronous: localStorage only exists in the browser, so this
+    // one-time hydration can't be done during the initial (possibly server) render.
     useEffect(() => {
         const storedToken = localStorage.getItem(TOKEN_KEY);
         const storedUser = localStorage.getItem(USER_KEY);
         if (storedToken && storedUser) {
             try {
                 const parsedUser = JSON.parse(storedUser);
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time localStorage hydration, not a state sync loop
                 setState({ token: storedToken, user: parsedUser, company: null, isAuthenticated: true, isLoading: false });
             } catch {
                 setState(s => ({ ...s, isLoading: false }));
