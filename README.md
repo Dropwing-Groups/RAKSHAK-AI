@@ -1,6 +1,31 @@
 # RAKSHAK AI
 
+[![CI](https://github.com/dropwing-groups/rakshak-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/dropwing-groups/rakshak-ai/actions/workflows/ci.yml)
+![Backend](https://img.shields.io/badge/backend-Django%20REST%20Framework-092E20?logo=django)
+![Frontend](https://img.shields.io/badge/frontend-Next.js%2016-000000?logo=nextdotjs)
+![AI](https://img.shields.io/badge/AI-YOLOv8%20%7C%20IsolationForest%20%7C%20Bayesian%20Fusion-blueviolet)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 RAKSHAK AI is an intelligent surveillance and telemetry platform designed for high-value fleet monitoring. It merges real-time GPS tracking, computer vision (YOLOv8), and multi-agent AI risk analysis to provide preemptive intelligence, actionable insights, and centralized operational command.
+
+## Screenshots
+
+| Command Center | Alert Intelligence Center |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Alerts](docs/screenshots/alerts.png) |
+
+| Landing Page | Risk Analysis |
+|---|---|
+| ![Landing](docs/screenshots/landing.png) | ![Risk Analysis](docs/screenshots/risk-analysis.png) |
+
+<details>
+<summary>More screenshots (Fleet, Login)</summary>
+
+| Fleet | Login |
+|---|---|
+| ![Fleet](docs/screenshots/fleet.png) | ![Login](docs/screenshots/login.png) |
+
+</details>
 
 ## System Architecture
 
@@ -151,7 +176,11 @@ python -m venv venv
 # Install compiled ML dependencies and REST frameworks
 pip install -r requirements.txt
 
-# Provision database schemas (Trucks, Trips, GPSLogs, Alerts)
+# Copy env template and adjust as needed (defaults work out of the box —
+# template-based AI explanations, SQLite, SMTP/Twilio suppressed)
+cp .env.example .env
+
+# Provision database schemas (Trucks, Trips, GPSLogs, Alerts, JourneyReports)
 python manage.py makemigrations
 python manage.py migrate
 
@@ -160,6 +189,12 @@ python manage.py runserver
 ```
 
 Reference the `backend/API_REFERENCE.md` and `backend/AI_CONTRACT.md` for exact integration parameters. Once active, the API will bind to `http://localhost:8000/`.
+
+**Run the test suite:**
+
+```bash
+python manage.py test surveillance
+```
 
 ### 2. Frontend Application (Next.js)
 
@@ -171,6 +206,9 @@ The frontend leverages React 19, Next.js 16 (Turbopack), and Framer Motion for a
 # Navigate to frontend directory
 cd frontend
 
+# Copy env template — points the app at the local Django backend
+cp .env.example .env.local
+
 # Hydrate node_modules dependencies
 npm install
 
@@ -179,3 +217,44 @@ npm run dev
 ```
 
 Build processes natively optimize images and components. The frontend UI will initialize on `http://localhost:3000/`.
+
+**Lint / build check:**
+
+```bash
+npm run lint
+npm run build
+```
+
+### 3. Run Everything with Docker Compose
+
+For a one-command local stack (Redis + Django backend + Next.js frontend):
+
+```bash
+docker compose up --build
+```
+
+Backend: `http://localhost:8000/api/` · Frontend: `http://localhost:3000/`.
+This uses the same environment defaults as the manual setup above (template
+explanations, SQLite, demo mode) — see `docker-compose.yml` to point it at a
+managed Postgres/Redis for a real deployment.
+
+## Key API Endpoints
+
+Beyond standard CRUD (`/api/trucks/`, `/api/trips/`, `/api/alerts/`, ...):
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/trips/{id}/gps/` | Ingest a live GPS ping; runs the Route Agent and updates the trip's risk in real time |
+| `GET` | `/api/trips/{id}/gps/` | GPS history for a trip |
+| `POST` | `/api/trips/{id}/pre-journey-report/` | Generate a saved pre-journey risk report (route + cargo value + driver history) |
+| `GET` | `/api/trips/{id}/pre-journey-report/` | Fetch the latest report for a trip |
+| `GET` | `/api/route-zones/` | Public GeoJSON of safe corridors / high-risk zones, for the frontend map |
+| `POST` | `/api/agents/simulate/` | One-shot demo scenario (used by the dashboard's "Trigger Demo" button) |
+
+Full endpoint reference: `backend/API_REFERENCE.md`. Backend completeness
+notes and design rationale: `backend/BACKEND_GAPS.md`.
+
+## Continuous Integration
+
+Every push and pull request runs `.github/workflows/ci.yml`:
+Django test suite on the backend, ESLint + `next build` on the frontend.

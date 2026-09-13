@@ -18,6 +18,18 @@ import {
 import styles from './page.module.css';
 import dynamic from 'next/dynamic';
 
+// Deterministic pseudo-random jitter derived from a string id, so map markers
+// stay in a stable position across re-renders instead of hopping around
+// (Math.random() during render is impure and would do exactly that).
+function jitterFromId(id: string, magnitude = 0.05): number {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = (hash * 31 + id.charCodeAt(i)) | 0;
+    }
+    // Map the hash to [-magnitude/2, magnitude/2]
+    return ((hash % 1000) / 1000) * magnitude - magnitude / 2;
+}
+
 const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent'), { ssr: false });
 
 const stagger = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
@@ -55,15 +67,20 @@ function CompanyDetailPanel({ company, onClose }: DetailPanelProps) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Re-arm the loading spinner on every company switch (not just first mount).
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronizing with the external API fetch below, not a render loop
         setLoading(true);
+        let cancelled = false;
         Promise.all([
             getTrucksByCompany(company.company_id),
             getTripsByCompany(company.company_id),
         ]).then(([t, tr]) => {
+            if (cancelled) return;
             setTrucks(t);
             setTrips(tr);
             setLoading(false);
         });
+        return () => { cancelled = true; };
     }, [company.company_id]);
 
     const activeTrips = trips.filter(t => ['In-Transit', 'Scheduled', 'Alert'].includes(t.status));
@@ -380,6 +397,7 @@ export default function AdminDashboard() {
             if (!isAuthenticated || user?.role !== 'admin') {
                 router.replace('/dashboard');
             } else {
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- initial admin-data fetch once auth resolves, not a state-sync loop
                 fetchAll();
             }
         }
@@ -777,8 +795,9 @@ export default function AdminDashboard() {
                                             else if (cname.includes('pune')) { lat = 18.5204; lng = 73.8567; }
                                             else if (cname.includes('ahmedabad')) { lat = 23.0225; lng = 72.5714; }
                                             else if (cname.includes('kolkata')) { lat = 22.5726; lng = 88.3639; }
-                                            lat += (Math.random() - 0.5) * 0.05;
-                                            lng += (Math.random() - 0.5) * 0.05;
+                                            const idSeed = String(c.company_id);
+                                            lat += jitterFromId(idSeed + 'lat');
+                                            lng += jitterFromId(idSeed + 'lng');
                                             return {
                                                 lat, lng,
                                                 title: c.name,

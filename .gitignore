@@ -1,5 +1,7 @@
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -9,13 +11,15 @@ venv.bak/
 
 # macOS
 .DS_Store
+._*
 
 # Python
 __pycache__/
 *.pyc
 
-# Models
+# Models & pretrained weights (downloaded on first run / trained locally)
 *.pkl
+*.pt
 AI-models/
 ai_models/
 
@@ -30,4 +34,23 @@ CSV-data/
 *.prj
 *.cpg
 roads/
+
+# Django
 backend/db.sqlite3
+backend/staticfiles/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/.env.local
+
+# Scratch / debug output — never commit ad-hoc terminal captures
+*.log
+check_out.txt
+results.txt
+.git-status*.txt
+
+# Editors
+.vscode/
+.idea/

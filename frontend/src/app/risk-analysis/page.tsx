@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import styles from './page.module.css';
-import { Shield, BrainCircuit, Monitor, HardHat, Shirt, Pill, Car, CheckCircle2, Box, History, MapPin } from 'lucide-react';
+import { Shield, BrainCircuit, Monitor, HardHat, Shirt, Pill, Car, Box, History, MapPin } from 'lucide-react';
 import { ROUTE_OPTIONS, CARGO_TYPE_OPTIONS, computeRiskReport, RiskReportResult } from '@/services/riskUtils';
 import { AgentRadar, RiskTimeline } from '@/components/charts/ChartComponents';
 import AuthGuard from '@/components/AuthGuard';
@@ -105,9 +105,8 @@ export default function RiskAnalysis() {
         setIsPredicting(false);
     };
 
-    const CARGO_COLS = 3; // R7: 3-col on desktop, 2-col on mobile via CSS
-
     return (
+        <AuthGuard>
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className={styles.container}>
             <motion.div variants={fadeUp} className={styles.header}>
                 <div>
@@ -352,5 +351,6 @@ export default function RiskAnalysis() {
                 </motion.section>
             )}
         </motion.div>
+        </AuthGuard>
     );
 }
