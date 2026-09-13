@@ -6,7 +6,15 @@
  * Shows truck markers (colour-coded by risk), route polylines, and danger zones.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+// The Google Maps JS SDK attaches itself to `window.google` and we invoke a
+// dynamically-named ready callback on `window` — declare just enough of the
+// shape here instead of reaching for `any`.
+type WindowWithGoogleMaps = typeof window & {
+    google?: { maps?: unknown };
+    [callbackName: string]: unknown;
+};
 
 export interface MapMarker {
     lat: number;
@@ -48,14 +56,15 @@ function loadGoogleMapsSDK(): Promise<void> {
 
     _sdkPromise = new Promise<void>((resolve, reject) => {
         // Already loaded (e.g., HMR reload)
-        if (typeof window !== 'undefined' && (window as any).google?.maps) {
+        const win = window as WindowWithGoogleMaps;
+        if (typeof window !== 'undefined' && win.google?.maps) {
             resolve();
             return;
         }
 
         const callbackName = '__rakshak_maps_ready__';
-        (window as any)[callbackName] = () => {
-            delete (window as any)[callbackName];
+        win[callbackName] = () => {
+            delete win[callbackName];
             resolve();
         };
 
