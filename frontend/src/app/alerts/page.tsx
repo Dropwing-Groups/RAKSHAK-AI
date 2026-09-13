@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 import { getAlerts, resolveAlert, getFleetData, EnhancedAlert, FleetVehicle } from '@/services/apiClient';
@@ -42,7 +41,6 @@ type SortKey = 'time' | 'severity' | 'truck';
 const SEVERITY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 
 export default function Alerts() {
-    const router = useRouter();
     const [alerts, setAlerts] = useState<EnhancedAlert[]>([]);
     const [filter, setFilter] = useState<'All' | 'Critical' | 'High' | 'Medium' | 'Low'>('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -71,6 +69,7 @@ export default function Alerts() {
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time initial fetch, not a state-sync loop
         fetchAlerts();
         const interval = setInterval(fetchAlerts, 30000); // A3
         return () => clearInterval(interval);
@@ -187,6 +186,7 @@ export default function Alerts() {
     const resolvedCount = resolvedIds.size;
 
     return (
+        <AuthGuard>
         <div className={styles.container}>
             <div className={styles.header}>
                 <div className={styles.headerTop}>
@@ -721,5 +721,6 @@ export default function Alerts() {
                 })()}
             </AnimatePresence>
         </div>
+        </AuthGuard>
     );
 }

@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     LogisticsCompanyViewSet, ControlAreaContactViewSet,
     TruckViewSet, TripViewSet, GPSLogViewSet, AlertViewSet,
+    RouteZonesView,
 )
 from .agent_views import (
     VisionEventView, FusionRiskView, SimulationView,
@@ -62,4 +63,9 @@ urlpatterns = [
     path('agents/route/',               RouteView.as_view(),               name='route'),
     path('agents/risk-fusion/',         RiskFusionView.as_view(),         name='risk_fusion'),
     path('agents/explain/',             ExplainabilityView.as_view(),     name='explain'),
+
+    # ---------------------------------------------------------
+    # Public map data
+    # ---------------------------------------------------------
+    path('route-zones/',                RouteZonesView.as_view(),         name='route-zones'),
 ]
