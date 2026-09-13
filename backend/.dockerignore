@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+check_out.txt
+results.txt
+*.pt
+*.pkl
+AI-models/
+ai_models/
+.git/

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import styles from './page.module.css';
 import { getFleetData, getAlerts, triggerSimulation, FleetVehicle, Alert } from '@/services/apiClient';
 import { SeverityDonut, FleetStatusDonut, RiskBars, RiskTimeline } from '@/components/charts/ChartComponents';
@@ -28,7 +28,7 @@ const GoogleMapComponent = dynamic(() => import('@/components/GoogleMapComponent
 // Error Boundary (G5)
 import { Component, ReactNode } from 'react';
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
-    constructor(props: any) { super(props); this.state = { hasError: false }; }
+    constructor(props: { children: ReactNode; fallback?: ReactNode }) { super(props); this.state = { hasError: false }; }
     static getDerivedStateFromError() { return { hasError: true }; }
     render() {
         if (this.state.hasError) return this.props.fallback || <div className={styles.errorFallback}>Component failed to load.</div>;
@@ -199,6 +199,21 @@ export default function Dashboard() {
                                 {filter} {filter === 'High Risk' && highRiskCount > 0 && <span className={styles.filterBadge}>{highRiskCount}</span>}
                             </button>
                         ))}
+                        <button
+                            onClick={handleDemo}
+                            disabled={demoStatus === 'running' || !fleet.some(v => v.risk.level === 'High' || v.risk.level === 'Critical')}
+                            className={styles.filterBtn}
+                            aria-label="Trigger demo threat scenario"
+                            title="Inject a full threat scenario on the highest-risk truck to see the alert pipeline live"
+                        >
+                            {demoStatus === 'running' ? (
+                                <>⏳ Running…</>
+                            ) : demoStatus === 'done' ? (
+                                <><CheckCircle2 size={14} style={{ marginRight: 4 }} />Triggered</>
+                            ) : (
+                                <><Zap size={14} style={{ marginRight: 4 }} />Trigger Demo</>
+                            )}
+                        </button>
                     </div>
                 </motion.div>
 
@@ -440,8 +455,7 @@ export default function Dashboard() {
                             </thead>
                             <tbody>
                                 {filteredFleet.map((vehicle, i) => {
-                                    // D1: Real-ish timestamps based on index offset
-                                    const pingTime = new Date(Date.now() - i * 47000);
+                                    // D1: Real-ish relative timestamp based on index offset
                                     const pingLabel = i === 0 ? 'Just now' : `${Math.round(i * 47 / 60)}m ago`;
                                     const statusStyle = STATUS_STYLE[vehicle.status] || { color: '#475569', bg: 'rgba(71,85,105,0.08)' };
                                     return (

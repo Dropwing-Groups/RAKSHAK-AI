@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth, RegisterCompanyPayload } from '@/context/AuthContext';
-import { Eye, EyeOff, Shield, Building2, User, Lock, Mail, MapPin, ArrowRight, Loader2, Zap } from 'lucide-react';
+import { Eye, EyeOff, Shield, Building2, User, Lock, Mail, ArrowRight, Loader2, Zap } from 'lucide-react';
 
 type Mode = 'login' | 'register';
 

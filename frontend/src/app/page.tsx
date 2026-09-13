@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
 import React from 'react';
 import styles from './page.module.css';
-import { Target, Eye, ShieldAlert, Zap, ArrowRight, ShieldCheck, BarChart3, Globe, Shield, Activity, Lock, Leaf, Recycle, Wind } from 'lucide-react';
+import { Target, Eye, Zap, ArrowRight, ShieldCheck, Globe, Shield, Activity, Lock, Leaf, Recycle, Wind } from 'lucide-react';
 
 // Animation variants
 const staggerContainer = {
@@ -26,7 +26,13 @@ const fadeIn = {
   show: { opacity: 1, transition: { duration: 0.8 } }
 };
 
-function SpotlightCard({ children, className, bentoBgProps }: any) {
+interface SpotlightCardProps {
+  children: React.ReactNode;
+  className?: string;
+  bentoBgProps?: string;
+}
+
+function SpotlightCard({ children, className, bentoBgProps }: SpotlightCardProps) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -377,7 +383,7 @@ export default function Home() {
               </div>
             </div>
             <h3>Climate Action</h3>
-            <p>AI-optimised routing eliminates unnecessary detours and idling — directly reducing CO₂ emissions from India's fastest-growing pollution source: road freight transport.</p>
+            <p>AI-optimised routing eliminates unnecessary detours and idling — directly reducing CO₂ emissions from India&apos;s fastest-growing pollution source: road freight transport.</p>
             <div className={styles.sdgMini}>
               <div className={styles.sdgMiniRow}><span>CO₂ Saved / Fleet</span><strong>1.1 t/day</strong></div>
               <div className={styles.sdgMiniRow}><span>Green Routes Used</span><strong>73%</strong></div>
